@@ -8,7 +8,7 @@ import io
 app = FastAPI(title="YOLO Object Detection API")
 
 # Load YOLO model
-model = YOLO(r"C:\Users\Abinesh\Desktop\datasets\runs\detect\train\weights\best.pt")  # Make sure best.pt is in the same folder
+model = YOLO(r"https://raw.githubusercontent.com/Chandru05k/civic_issues/main/best.pt")  # Make sure best.pt is in the same folder
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
@@ -30,5 +30,6 @@ async def predict(file: UploadFile = File(...)):
             })
 
     return JSONResponse(content={"detections": detections})
+
 
 
