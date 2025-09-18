@@ -1,22 +1,33 @@
+import requests
+from pathlib import Path
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from ultralytics import YOLO
 from PIL import Image
 import io
 
-# Initialize FastAPI app
 app = FastAPI(title="YOLO Object Detection API")
 
-# Load YOLO model
-model = YOLO(r"https://raw.githubusercontent.com/Chandru05k/civic_issues/main/best.pt")  # Make sure best.pt is in the same folder
+# Local path to save the model
+weights_path = Path("weights/best.pt")
+weights_path.parent.mkdir(exist_ok=True)  # Create folder if not exists
+
+# Raw GitHub URL
+url = "https://raw.githubusercontent.com/Chandru05k/civic_issues/main/best.pt"
+
+# Download the file if it doesn't exist locally
+if not weights_path.exists():
+    response = requests.get(url)
+    response.raise_for_status()
+    weights_path.write_bytes(response.content)
+
+# Load YOLO model from local file
+model = YOLO(str(weights_path))
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    # Read image
     image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-
-    # Run inference
     results = model.predict(image, conf=0.25)
 
     detections = []
@@ -30,6 +41,3 @@ async def predict(file: UploadFile = File(...)):
             })
 
     return JSONResponse(content={"detections": detections})
-
-
-
